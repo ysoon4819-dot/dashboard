@@ -308,6 +308,33 @@
     .amount-zero { color: #94a3b8; }
     .amount-high { color: var(--red); font-weight: 600; }
 
+    /* ── TABS ── */
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--border);
+      padding: 0 20px;
+      background: #f8fafc;
+    }
+    .tab-btn {
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
     .section-divider {
       display: flex;
       align-items: center;
@@ -492,8 +519,8 @@
 
     <div class="chart-grid" style="margin-bottom:16px;">
       <div class="chart-card">
-        <h3 id="gcpBarTitle">📊 프로젝트별 소계 TOP 10</h3>
-        <div class="chart-wrapper" style="height:320px;"><canvas id="gcpBarChart"></canvas></div>
+        <h3 id="gcpServicePieTitle">🥧 서비스별 비중 TOP 8</h3>
+        <div class="chart-wrapper" style="height:320px;"><canvas id="gcpServicePieChart"></canvas></div>
       </div>
       <div class="chart-card">
         <h3 id="gcpPieTitle">🥧 프로젝트 비중 TOP 8</h3>
@@ -503,20 +530,43 @@
 
     <div class="table-card" style="margin-bottom:24px;">
       <div class="table-header">
-        <h3>📋 GCP 프로젝트별 상세 비용</h3>
+        <h3>📋 GCP 상세 비용</h3>
         <span class="total-count" id="gcpTableCount"></span>
       </div>
-      <div id="gcpTableWrap" style="overflow-x:auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>날짜</th>
-              <th>프로젝트</th>
-              <th class="num">소계</th>
-            </tr>
-          </thead>
-          <tbody id="gcpTableBody"></tbody>
-        </table>
+      <!-- 탭 버튼 -->
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchGcpTab('project', this)">프로젝트별</button>
+        <button class="tab-btn" onclick="switchGcpTab('service', this)">서비스별</button>
+      </div>
+      <!-- 프로젝트별 탭 -->
+      <div id="gcpTabProject" class="tab-pane active">
+        <div id="gcpTableWrap" style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>날짜</th>
+                <th>프로젝트</th>
+                <th class="num">소계</th>
+              </tr>
+            </thead>
+            <tbody id="gcpTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <!-- 서비스별 탭 -->
+      <div id="gcpTabService" class="tab-pane">
+        <div id="gcpServiceWrap" style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>날짜</th>
+                <th>서비스</th>
+                <th class="num">소계</th>
+              </tr>
+            </thead>
+            <tbody id="gcpServiceBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -898,13 +948,38 @@ const GCP_COLORS = [
   '#4285F4','#EA4335','#FBBC05','#34A853','#8b5cf6','#06b6d4',
   '#f97316','#ec4899','#14b8a6','#6366f1','#84cc16','#f43f5e'
 ];
-let gcpBarInst = null, gcpPieInst = null;
+let gcpServicePieInst = null, gcpPieInst = null;
 
 function buildGcpSection(selectedMonth) {
   const months = selectedMonth === 'all' ? MONTHS : [selectedMonth];
   const label = selectedMonth === 'all' ? '전체 (1~3월)' : selectedMonth;
-  document.getElementById('gcpBarTitle').textContent = `📊 프로젝트별 소계 TOP 10 — ${label}`;
+  document.getElementById('gcpServicePieTitle').textContent = `🥧 서비스별 비중 TOP 8 — ${label}`;
   document.getElementById('gcpPieTitle').textContent = `🥧 프로젝트 비중 TOP 8 — ${label}`;
+
+  // ── 서비스별 도넛 차트 ──
+  if (gcpServicePieInst) gcpServicePieInst.destroy();
+  const svcAgg = {};
+  gcpServiceData.filter(d => months.includes(d.month)).forEach(d => {
+    svcAgg[d.service] = (svcAgg[d.service] || 0) + d.sub;
+  });
+  const svcSorted = Object.entries(svcAgg).map(([s,v]) => ({ service:s, sub:v })).sort((a,b) => b.sub - a.sub);
+  const svcTop8 = svcSorted.filter(d => d.sub > 0).slice(0, 8);
+  const svcTotal = svcSorted.reduce((a,b) => a + b.sub, 0);
+  const svcOthers = svcTotal - svcTop8.reduce((a,b) => a + b.sub, 0);
+  const svcLabels = [...svcTop8.map(d => d.service), ...(svcOthers > 0 ? ['기타'] : [])];
+  const svcData   = [...svcTop8.map(d => d.sub),     ...(svcOthers > 0 ? [svcOthers] : [])];
+  const svcColors = [...GCP_COLORS.slice(0, 8),      ...(svcOthers > 0 ? ['#94a3b8'] : [])];
+  gcpServicePieInst = new Chart(document.getElementById('gcpServicePieChart').getContext('2d'), {
+    type: 'doughnut',
+    data: { labels: svcLabels, datasets: [{ data: svcData, backgroundColor: svcColors, borderWidth:2, borderColor:'#fff' }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position:'bottom', labels:{ boxWidth:11, font:{size:10}, padding:8 } },
+        tooltip: { callbacks: { label: c => ` ${c.label}: ${fmt(c.raw)}원 (${svcTotal>0?(c.raw/svcTotal*100).toFixed(1):0}%)` } }
+      }
+    }
+  });
 
   // 월별로 집계 (같은 프로젝트를 합산)
   const agg = {};
@@ -916,33 +991,6 @@ function buildGcpSection(selectedMonth) {
     agg[d.project].sub   += d.sub;
   });
   const sorted = Object.values(agg).sort((a,b) => b.sub - a.sub);
-
-  // ── BAR CHART (가로, TOP 10) ──
-  if (gcpBarInst) gcpBarInst.destroy();
-  const top10 = sorted.filter(d => d.sub > 0).slice(0, 10);
-  const barCtx = document.getElementById('gcpBarChart').getContext('2d');
-  gcpBarInst = new Chart(barCtx, {
-    type: 'bar',
-    data: {
-      labels: top10.map(d => d.project),
-      datasets: [
-        { label:'사용 비용', data: top10.map(d => d.cost),  backgroundColor:'#4285F430', borderColor:'#4285F4', borderWidth:1.5 },
-        { label:'소계',     data: top10.map(d => d.sub),   backgroundColor: top10.map((_,i) => GCP_COLORS[i%GCP_COLORS.length]+'cc'), borderWidth:0 },
-      ]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { position:'bottom', labels:{ boxWidth:12, font:{size:11} } },
-        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmt(c.raw)}원` } }
-      },
-      scales: {
-        x: { ticks:{ callback: v => fmtK(v), font:{size:10} }, grid:{ color:'#f1f5f9' } },
-        y: { ticks:{ font:{size:11} }, grid:{ display:false } }
-      }
-    }
-  });
 
   // ── PIE CHART (TOP 8) ──
   if (gcpPieInst) gcpPieInst.destroy();
@@ -1004,6 +1052,125 @@ function buildGcpSection(selectedMonth) {
   }
 }
 
+// ── GCP SERVICE DATA ──
+const gcpServiceData = [
+  // 2026년 3월
+  { month:'2026년 3월', service:'BigQuery',                               sub:4970808 },
+  { month:'2026년 3월', service:'Cloud Logging',                          sub:4174337 },
+  { month:'2026년 3월', service:'Cloud Run',                              sub:1000445 },
+  { month:'2026년 3월', service:'Networking',                             sub:744376  },
+  { month:'2026년 3월', service:'Kubernetes Engine',                      sub:542542  },
+  { month:'2026년 3월', service:'Compute Engine',                         sub:462119  },
+  { month:'2026년 3월', service:'Cloud Storage',                          sub:448862  },
+  { month:'2026년 3월', service:'Cloud SQL',                              sub:330386  },
+  { month:'2026년 3월', service:'App Engine',                             sub:290010  },
+  { month:'2026년 3월', service:'Cloud Filestore',                        sub:197002  },
+  { month:'2026년 3월', service:'Cloud Dataflow',                         sub:164332  },
+  { month:'2026년 3월', service:'Vertex AI',                              sub:103570  },
+  { month:'2026년 3월', service:'Cloud Memorystore for Redis',            sub:97803   },
+  { month:'2026년 3월', service:'Elastic Cloud (Elasticsearch Service)',  sub:83404   },
+  { month:'2026년 3월', service:'Cloud Monitoring',                       sub:53575   },
+  { month:'2026년 3월', service:'Artifact Registry',                      sub:38574   },
+  { month:'2026년 3월', service:'Gemini API',                             sub:31239   },
+  { month:'2026년 3월', service:'Secret Manager',                         sub:4128    },
+  { month:'2026년 3월', service:'Cloud DNS',                              sub:1231    },
+  { month:'2026년 3월', service:'Cloud Scheduler',                        sub:788     },
+  { month:'2026년 3월', service:'Cloud Pub/Sub',                          sub:73      },
+  { month:'2026년 3월', service:'Cloud Run Functions',                    sub:17      },
+  { month:'2026년 3월', service:'VM Manager',                             sub:0       },
+  // 2026년 2월
+  { month:'2026년 2월', service:'BigQuery',                               sub:6422700 },
+  { month:'2026년 2월', service:'Cloud Logging',                          sub:4485789 },
+  { month:'2026년 2월', service:'App Engine',                             sub:1910623 },
+  { month:'2026년 2월', service:'Cloud Run',                              sub:1418389 },
+  { month:'2026년 2월', service:'Networking',                             sub:1179522 },
+  { month:'2026년 2월', service:'Kubernetes Engine',                      sub:722294  },
+  { month:'2026년 2월', service:'Compute Engine',                         sub:605342  },
+  { month:'2026년 2월', service:'Cloud Storage',                          sub:509514  },
+  { month:'2026년 2월', service:'Cloud SQL',                              sub:440805  },
+  { month:'2026년 2월', service:'Cloud Filestore',                        sub:278236  },
+  { month:'2026년 2월', service:'Cloud Dataflow',                         sub:209917  },
+  { month:'2026년 2월', service:'Vertex AI',                              sub:132811  },
+  { month:'2026년 2월', service:'Cloud Memorystore for Redis',            sub:124932  },
+  { month:'2026년 2월', service:'Elastic Cloud (Elasticsearch Service)',  sub:75514   },
+  { month:'2026년 2월', service:'Cloud Monitoring',                       sub:65584   },
+  { month:'2026년 2월', service:'Artifact Registry',                      sub:54062   },
+  { month:'2026년 2월', service:'Cloud Run Functions',                    sub:18586   },
+  { month:'2026년 2월', service:'Gemini API',                             sub:12578   },
+  { month:'2026년 2월', service:'Secret Manager',                         sub:5812    },
+  { month:'2026년 2월', service:'Cloud Pub/Sub',                          sub:1817    },
+  { month:'2026년 2월', service:'Cloud DNS',                              sub:1739    },
+  { month:'2026년 2월', service:'Cloud Scheduler',                        sub:1130    },
+  { month:'2026년 2월', service:'Dataplex',                               sub:0       },
+  { month:'2026년 2월', service:'VM Manager',                             sub:0       },
+  { month:'2026년 2월', service:'Cloud Deploy',                           sub:0       },
+  // 2026년 1월
+  { month:'2026년 1월', service:'BigQuery',                               sub:6613270 },
+  { month:'2026년 1월', service:'App Engine',                             sub:3070802 },
+  { month:'2026년 1월', service:'Cloud Storage',                          sub:2630334 },
+  { month:'2026년 1월', service:'Cloud Run',                              sub:1619267 },
+  { month:'2026년 1월', service:'Cloud Logging',                          sub:1590444 },
+  { month:'2026년 1월', service:'Networking',                             sub:1049354 },
+  { month:'2026년 1월', service:'Kubernetes Engine',                      sub:711321  },
+  { month:'2026년 1월', service:'Compute Engine',                         sub:599768  },
+  { month:'2026년 1월', service:'Cloud SQL',                              sub:425522  },
+  { month:'2026년 1월', service:'Cloud Filestore',                        sub:258447  },
+  { month:'2026년 1월', service:'Cloud Dataflow',                         sub:215912  },
+  { month:'2026년 1월', service:'Vertex AI',                              sub:143855  },
+  { month:'2026년 1월', service:'Cloud Memorystore for Redis',            sub:128480  },
+  { month:'2026년 1월', service:'Elastic Cloud (Elasticsearch Service)',  sub:83871   },
+  { month:'2026년 1월', service:'Cloud Monitoring',                       sub:69519   },
+  { month:'2026년 1월', service:'Artifact Registry',                      sub:49188   },
+  { month:'2026년 1월', service:'Cloud Deploy',                           sub:21515   },
+  { month:'2026년 1월', service:'Cloud Run Functions',                    sub:20303   },
+  { month:'2026년 1월', service:'Secret Manager',                         sub:2848    },
+  { month:'2026년 1월', service:'Cloud Pub/Sub',                          sub:1780    },
+  { month:'2026년 1월', service:'Cloud DNS',                              sub:1634    },
+  { month:'2026년 1월', service:'Cloud Scheduler',                        sub:1286    },
+  { month:'2026년 1월', service:'Gemini API',                             sub:291     },
+  { month:'2026년 1월', service:'Cloud Key Management Service (KMS)',     sub:1       },
+  { month:'2026년 1월', service:'VM Manager',                             sub:0       },
+];
+
+function buildGcpServiceTable(selectedMonth) {
+  const rows = selectedMonth === 'all'
+    ? MONTHS.flatMap(m => gcpServiceData.filter(d => d.month === m))
+    : gcpServiceData.filter(d => d.month === selectedMonth);
+
+  const total = rows.reduce((s, d) => s + (d.sub || 0), 0);
+  const tbody = document.getElementById('gcpServiceBody');
+
+  tbody.innerHTML = rows.map(d => {
+    const subStyle = d.sub === 0 ? 'color:#94a3b8;' : d.sub >= 1000000 ? 'color:#ef4444;font-weight:600;' : '';
+    return `<tr>
+      <td style="white-space:nowrap;font-size:12px;color:var(--text-muted)">${d.month}</td>
+      <td style="font-weight:500;">${d.service}</td>
+      <td class="num" style="${subStyle}">${d.sub > 0 ? fmt(d.sub) : '-'}</td>
+    </tr>`;
+  }).join('') + `<tr style="background:#f8fafc;border-top:2px solid var(--border);">
+    <td colspan="2" style="font-weight:700;padding:10px 16px;">합계</td>
+    <td class="num" style="font-weight:700;color:var(--primary)">${fmt(total)}</td>
+  </tr>`;
+
+  const wrap = document.getElementById('gcpServiceWrap');
+  if (rows.length > 20) {
+    wrap.style.maxHeight = '520px';
+    wrap.style.overflowY = 'auto';
+  } else {
+    wrap.style.maxHeight = '';
+    wrap.style.overflowY = '';
+  }
+}
+
+let currentGcpTab = 'project';
+function switchGcpTab(tab, btn) {
+  currentGcpTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('gcpTabProject').classList.toggle('active', tab === 'project');
+  document.getElementById('gcpTabService').classList.toggle('active', tab === 'service');
+}
+
 // ── FILTER ──
 function applyFilter() {
   const month = document.getElementById('filterMonth').value;
@@ -1015,6 +1182,7 @@ function applyFilter() {
   buildPieChart(month);
   buildSummary(month);
   buildGcpSection(month);
+  buildGcpServiceTable(month);
 
   const filtered = rawData.filter(d =>
     (month==='all' || d.month===month) &&
@@ -1037,6 +1205,7 @@ buildTrendChart();
 buildPieChart('all');
 buildSummary('all');
 buildGcpSection('all');
+buildGcpServiceTable('all');
 renderTable(rawData);
 </script>
 </body>
