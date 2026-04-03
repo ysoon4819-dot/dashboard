@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>경영지원팀 대시보드</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@latest/dist/web/static/pretendard.css">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-light: #eff6ff;
+      --sidebar-bg: #1e293b;
+      --sidebar-text: #cbd5e1;
+      --sidebar-active: #2563eb;
+      --header-bg: #ffffff;
+      --bg: #f1f5f9;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --red: #ef4444;
+      --green: #22c55e;
+      --gcp-color: #4285f4;
+      --aws-color: #ff9900;
+      --dukkul-color: #8b5cf6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: 240px;
+      background: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      height: 100vh;
+      z-index: 100;
+    }
+    #sidebar .logo {
+      padding: 24px 20px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #sidebar nav { flex: 1; padding: 12px 0; }
+    #sidebar nav .menu-group-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #475569;
+      padding: 12px 20px 4px;
+    }
+    #sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      color: var(--sidebar-text);
+      text-decoration: none;
+      font-size: 13.5px;
+      transition: background 0.15s, color 0.15s;
+      cursor: pointer;
+    }
+    #sidebar nav a:hover { background: #334155; color: #fff; }
+    #sidebar nav a.active { background: var(--sidebar-active); color: #fff; font-weight: 600; }
+    #sidebar nav a .icon { font-size: 16px; width: 20px; text-align: center; }
+    #sidebar .sidebar-footer {
+      padding: 16px 20px;
+      font-size: 11px;
+      color: #475569;
+      border-top: 1px solid #334155;
+    }
+
+    /* ── MAIN ── */
+    #main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    header .breadcrumb { font-size: 13px; color: var(--text-muted); }
+    header .breadcrumb strong { color: var(--text); }
+    header .header-right { display: flex; align-items: center; gap: 16px; }
+    header .badge {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 99px;
+    }
+    header .avatar {
+      width: 34px; height: 34px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 13px; font-weight: 700;
+    }
+
+    /* ── CONTENT ── */
+    .content { padding: 28px; flex: 1; }
+    .page-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .page-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+
+    /* ── FILTER BAR ── */
+    .filter-bar {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .filter-bar label { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+    .filter-bar select, .filter-bar input {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      color: var(--text);
+      background: #fff;
+      cursor: pointer;
+    }
+    .filter-bar .spacer { flex: 1; }
+
+    /* ── KPI CARDS ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+    .kpi-card .kpi-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .kpi-card .kpi-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .kpi-card .kpi-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .kpi-card .kpi-icon img { width: 28px; height: 28px; object-fit: contain; }
+    .kpi-card .kpi-value { font-size: 21px; font-weight: 700; color: var(--text); }
+    .kpi-card .kpi-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .kpi-card .kpi-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 99px;
+      margin-top: 6px;
+    }
+    .kpi-badge.up { background: #fef2f2; color: var(--red); }
+    .kpi-badge.down { background: #f0fdf4; color: var(--green); }
+
+    /* ── CHARTS ── */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .chart-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .chart-card h3 { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 16px; }
+    .chart-wrapper { position: relative; height: 240px; }
+
+    /* ── SUMMARY ── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .summary-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .summary-card .sc-header {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+    }
+    .sc-header img { width: 20px; height: 20px; object-fit: contain; }
+    .sc-header.gcp { color: #4285f4; }
+    .sc-header.aws { color: #e65100; }
+    .sc-header.dukkul { color: #7c3aed; }
+    .summary-card table { font-size: 12px; width: 100%; border-collapse: collapse; }
+    .summary-card thead th {
+      background: #f8fafc;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 10px;
+      text-transform: uppercase;
+      padding: 7px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .summary-card thead th.num { text-align: right; }
+    .summary-card tbody td { padding: 7px 12px; border-bottom: 1px solid #f1f5f9; }
+    .summary-card tbody tr:last-child td { border-bottom: none; }
+    .summary-card tbody td.num { text-align: right; }
+
+    /* ── TABLE ── */
+    .table-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .table-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .table-header h3 { font-size: 14px; font-weight: 700; color: var(--text); }
+    .table-header .total-count { font-size: 12px; color: var(--text-muted); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      background: #f8fafc;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    thead th.num { text-align: right; }
+    tbody tr { border-bottom: 1px solid #f1f5f9; transition: background 0.1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #f8fafc; }
+    tbody td { padding: 10px 16px; }
+    tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+    .platform-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 5px;
+    }
+    .platform-badge img { width: 14px; height: 14px; object-fit: contain; }
+    .platform-badge.gcp { background: #e8f0fe; color: #4285f4; }
+    .platform-badge.aws { background: #fff3e0; color: #e65100; }
+    .platform-badge.dukkul { background: #f3e8ff; color: #7c3aed; }
+
+    .row-other { background: #fef9f9 !important; }
+    .row-other td { color: var(--red) !important; font-weight: 600; }
+    .amount-zero { color: #94a3b8; }
+    .amount-high { color: var(--red); font-weight: 600; }
+
+    @media (max-width: 1200px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .chart-grid { grid-template-columns: 1fr; }
+      .summary-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── SVG ICONS (hidden, referenced as data URLs via JS) ── -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="icon-gcp" viewBox="0 0 64 64">
+    <path d="M32 12 L44 34 H20 Z" fill="#4285F4"/>
+    <path d="M20 34 L32 56 L44 34 Z" fill="#34A853" opacity="0.15"/>
+    <circle cx="32" cy="28" r="10" fill="none" stroke="#EA4335" stroke-width="3"/>
+    <path d="M26 22 Q32 15 38 22" fill="none" stroke="#FBBC05" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+</svg>
+
+<!-- ── SIDEBAR ── -->
+<aside id="sidebar">
+  <div class="logo">
+    <span>🏢</span> 경영지원팀
+  </div>
+  <nav>
+    <div class="menu-group-label">메인</div>
+    <a href="#" class="active"><span class="icon">📊</span> 대시보드</a>
+    <div class="menu-group-label">비용 관리</div>
+    <a href="#" class="active" onclick="return false;"><span class="icon">🖥️</span> 서버비</a>
+    <a href="#" onclick="alert('준비 중입니다')"><span class="icon">💳</span> 기타 운영비</a>
+    <a href="#" onclick="alert('준비 중입니다')"><span class="icon">📦</span> 외주비</a>
+    <div class="menu-group-label">분석</div>
+    <a href="#" onclick="alert('준비 중입니다')"><span class="icon">📈</span> 월별 리포트</a>
+    <a href="#" onclick="alert('준비 중입니다')"><span class="icon">🎮</span> 프로젝트별 현황</a>
+    <div class="menu-group-label">설정</div>
+    <a href="#" onclick="alert('준비 중입니다')"><span class="icon">⚙️</span> 환경설정</a>
+  </nav>
+  <div class="sidebar-footer">경영지원팀 대시보드 v1.0</div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div id="main">
+  <header>
+    <div class="breadcrumb">비용관리 &rsaquo; <strong>서버비</strong></div>
+    <div class="header-right">
+      <div class="badge" id="headerBadge">2026년 1~3월</div>
+      <div class="avatar">관</div>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="page-title">🖥️ 서버비 현황</div>
+    <div class="page-subtitle">플랫폼별 · 프로젝트별 클라우드 서버비용 (뒤끝 / GCP / AWS)</div>
+
+    <!-- ── FILTER BAR ── -->
+    <div class="filter-bar">
+      <label>월</label>
+      <select id="filterMonth" onchange="applyFilter()">
+        <option value="all">전체</option>
+        <option value="2026년 3월">2026년 3월</option>
+        <option value="2026년 2월">2026년 2월</option>
+        <option value="2026년 1월">2026년 1월</option>
+      </select>
+      <label>플랫폼</label>
+      <select id="filterPlatform" onchange="applyFilter()">
+        <option value="all">전체</option>
+        <option value="GCP">GCP</option>
+        <option value="AWS">AWS</option>
+        <option value="뒤끝">뒤끝</option>
+      </select>
+      <label>프로젝트</label>
+      <input type="text" id="filterProject" placeholder="프로젝트 검색..." oninput="applyFilter()" style="width:160px;" />
+      <div class="spacer"></div>
+      <button onclick="resetFilter()" style="font-size:12px;padding:6px 14px;border:1px solid var(--border);background:#fff;border-radius:6px;cursor:pointer;color:var(--text-muted);">초기화</button>
+    </div>
+
+    <!-- ── KPI CARDS ── -->
+    <div class="kpi-grid">
+      <!-- 총 합계 -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <div class="kpi-label" id="kpi-total-label">총 서버비</div>
+          <div class="kpi-icon" style="background:#f1f5f9;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+              <rect x="2" y="5" width="20" height="14" rx="2" stroke="#64748b" stroke-width="1.8"/>
+              <path d="M2 9h20" stroke="#64748b" stroke-width="1.8"/>
+              <rect x="5" y="13" width="4" height="2" rx="1" fill="#64748b"/>
+              <rect x="11" y="13" width="6" height="2" rx="1" fill="#64748b"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value" id="kpi-total-krw">-</div>
+        <div class="kpi-sub" id="kpi-total-usd"></div>
+        <div id="kpi-total-badge" class="kpi-badge"></div>
+      </div>
+      <!-- GCP -->
+      <div class="kpi-card" style="border-left:3px solid var(--gcp-color);">
+        <div class="kpi-header">
+          <div class="kpi-label" id="kpi-gcp-label">GCP</div>
+          <div class="kpi-icon" style="background:#e8f0fe; border-radius:8px; width:36px; height:36px; display:flex; align-items:center; justify-content:center;">
+            <!-- Google Cloud SVG icon -->
+            <svg width="30" height="24" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+              <path d="M78 26C87 26 94 34 94 43 94 53 87 60 78 60L22 60C13 60 6 53 6 43 6 37 10 31 16 29 16 20 23 14 32 14 37 14 42 17 45 21 48 18 53 15 59 15 69 15 76 20 78 26Z" fill="#4285F4"/>
+              <circle cx="26" cy="22" r="20" fill="#EA4335"/>
+              <ellipse cx="6" cy="43" rx="10" ry="14" fill="#FBBC05"/>
+              <rect x="6" y="48" width="88" height="14" rx="7" fill="#34A853"/>
+              <path d="M78 33C84 33 88 38 88 43 88 49 84 54 78 54L22 54C16 54 12 49 12 43 12 38 16 34 20 33 21 27 26 24 33 24 37 24 41 26 43 29 46 26 50 25 55 25 62 25 68 29 70 33Z" fill="white"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value" id="kpi-gcp-krw"></div>
+        <div class="kpi-sub" id="kpi-gcp-usd"></div>
+        <div id="kpi-gcp-badge" class="kpi-badge"></div>
+      </div>
+      <!-- AWS -->
+      <div class="kpi-card" style="border-left:3px solid var(--aws-color);">
+        <div class="kpi-header">
+          <div class="kpi-label" id="kpi-aws-label">AWS</div>
+          <div class="kpi-icon" style="background:#fff3e0; border-radius:8px; width:36px; height:36px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;">
+            <!-- AWS icon: HTML text + SVG arrow -->
+            <span style="font-family:'Pretendard','Arial Black',Arial,sans-serif; font-size:11px; font-weight:900; color:#232F3E; letter-spacing:-0.5px; line-height:1;">aws</span>
+            <svg width="22" height="8" viewBox="0 0 100 38" fill="none">
+              <path d="M5 18 Q50 34 95 18" stroke="#FF9900" stroke-width="11" fill="none" stroke-linecap="round"/>
+              <polygon points="82,7 95,18 82,27" fill="#FF9900"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value" id="kpi-aws-krw"></div>
+        <div class="kpi-sub" id="kpi-aws-usd"></div>
+        <div id="kpi-aws-badge" class="kpi-badge"></div>
+      </div>
+      <!-- 뒤끝 -->
+      <div class="kpi-card" style="border-left:3px solid var(--dukkul-color);">
+        <div class="kpi-header">
+          <div class="kpi-label" id="kpi-dukkul-label">뒤끝</div>
+          <div class="kpi-icon" style="background:#f3e8ff; border-radius:8px; width:36px; height:36px; display:flex; align-items:center; justify-content:center;">
+            <!-- 뒤끝 SVG icon: black circle + red speech bubble -->
+            <svg width="22" height="28" viewBox="0 0 44 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="22" cy="13" r="12" fill="#1a1a1a"/>
+              <ellipse cx="22" cy="43" rx="13" ry="12" fill="#E53935"/>
+              <path d="M12 38 Q9 50 14 54 Q18 56 22 55 Q26 56 30 54 Q35 50 32 38" fill="#E53935"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value" id="kpi-dukkul-krw"></div>
+        <div class="kpi-sub" id="kpi-dukkul-usd"></div>
+        <div id="kpi-dukkul-badge" class="kpi-badge"></div>
+      </div>
+    </div>
+
+    <!-- ── CHARTS ── -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>📅 월별 플랫폼 서버비 추이 (원)</h3>
+        <div class="chart-wrapper"><canvas id="trendChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3 id="pieTitle">🥧 플랫폼 비중</h3>
+        <div class="chart-wrapper"><canvas id="pieChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ── PLATFORM SUMMARY ── -->
+    <div class="summary-grid" id="summarySection"></div>
+
+    <!-- ── DETAIL TABLE ── -->
+    <div class="table-card">
+      <div class="table-header">
+        <h3>📋 서버비 상세 내역</h3>
+        <span class="total-count" id="tableCount"></span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>플랫폼</th>
+              <th>월</th>
+              <th>프로젝트</th>
+              <th class="num">금액 (원)</th>
+              <th class="num">금액 ($)</th>
+              <th class="num">환율</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const rawData = [
+  { platform:'뒤끝', month:'2026년 3월', project:'쉐도우 서바이벌',     krw:0,        usd:0,    rate:1200 },
+  { platform:'뒤끝', month:'2026년 3월', project:'크라운 럼블',         krw:35364,    usd:29,   rate:1200 },
+  { platform:'뒤끝', month:'2026년 3월', project:'히어로즈 크루',        krw:261312,   usd:218,  rate:1200 },
+  { platform:'뒤끝', month:'2026년 3월', project:'히어로즈 크루 (중국)', krw:0,        usd:0,    rate:1200 },
+  { platform:'GCP',  month:'2026년 3월', project:'악!팅!',              krw:775166,   usd:515,  rate:1504.76 },
+  { platform:'GCP',  month:'2026년 3월', project:'에일리언 제로',        krw:3635770,  usd:2416, rate:1504.76 },
+  { platform:'GCP',  month:'2026년 3월', project:'빙글빙글 기사단',      krw:17479,    usd:12,   rate:1504.76 },
+  { platform:'GCP',  month:'2026년 3월', project:'몬스터하우스',         krw:71108,    usd:47,   rate:1504.76 },
+  { platform:'GCP',  month:'2026년 3월', project:'헬매니저',             krw:83224,    usd:55,   rate:1504.76 },
+  { platform:'GCP',  month:'2026년 3월', project:'드래곤아일랜드',       krw:144864,   usd:96,   rate:1504.76 },
+  { platform:'GCP',  month:'2026년 3월', project:'드림레시피',           krw:0,        usd:0,    rate:1504.76 },
+  { platform:'GCP',  month:'2026년 3월', project:'키스인퍼블릭',         krw:1880498,  usd:1250, rate:1504.76 },
+  { platform:'GCP',  month:'2026년 3월', project:'기타비용',             krw:7131512,  usd:4739, rate:1504.76, isOther:true },
+  { platform:'AWS',  month:'2026년 3월', project:'흑마법사키우기',       krw:0,        usd:0,    rate:1504.76 },
+  { platform:'AWS',  month:'2026년 3월', project:'던전랜덤디펜스',       krw:1605684,  usd:1067, rate:1504.76 },
+  { platform:'AWS',  month:'2026년 3월', project:'FLAMINGO',            krw:211359,   usd:140,  rate:1504.76 },
+  { platform:'AWS',  month:'2026년 3월', project:'로우핸드(기타)',        krw:0,        usd:0,    rate:1504.76 },
+  { platform:'AWS',  month:'2026년 3월', project:'치즈냥이',             krw:0,        usd:0,    rate:1504.76 },
+  { platform:'AWS',  month:'2026년 3월', project:'미니디펜더스',         krw:0,        usd:0,    rate:1504.76 },
+  { platform:'뒤끝', month:'2026년 2월', project:'쉐도우 서바이벌',     krw:0,        usd:0,    rate:1200 },
+  { platform:'뒤끝', month:'2026년 2월', project:'크라운 럼블',         krw:31824,    usd:27,   rate:1200 },
+  { platform:'뒤끝', month:'2026년 2월', project:'히어로즈 크루',        krw:354972,   usd:296,  rate:1200 },
+  { platform:'뒤끝', month:'2026년 2월', project:'히어로즈 크루 (중국)', krw:0,        usd:0,    rate:1200 },
+  { platform:'GCP',  month:'2026년 2월', project:'악!팅!',              krw:256656,   usd:176,  rate:1462.17 },
+  { platform:'GCP',  month:'2026년 2월', project:'에일리언 제로',        krw:1180942,  usd:808,  rate:1462.17 },
+  { platform:'GCP',  month:'2026년 2월', project:'빙글빙글 기사단',      krw:11619,    usd:8,    rate:1462.17 },
+  { platform:'GCP',  month:'2026년 2월', project:'몬스터하우스',         krw:21324,    usd:15,   rate:1462.17 },
+  { platform:'GCP',  month:'2026년 2월', project:'헬매니저',             krw:21994,    usd:15,   rate:1462.17 },
+  { platform:'GCP',  month:'2026년 2월', project:'드래곤아일랜드',       krw:36952,    usd:25,   rate:1462.17 },
+  { platform:'GCP',  month:'2026년 2월', project:'드림레시피',           krw:5851726,  usd:4002, rate:1462.17 },
+  { platform:'GCP',  month:'2026년 2월', project:'키스인퍼블릭',         krw:563368,   usd:385,  rate:1462.17 },
+  { platform:'GCP',  month:'2026년 2월', project:'기타비용',             krw:10733117, usd:7341, rate:1462.17, isOther:true },
+  { platform:'AWS',  month:'2026년 2월', project:'흑마법사키우기',       krw:0,        usd:0,    rate:1462.17 },
+  { platform:'AWS',  month:'2026년 2월', project:'던전랜덤디펜스',       krw:1721530,  usd:1177, rate:1462.17 },
+  { platform:'AWS',  month:'2026년 2월', project:'FLAMINGO',            krw:187874,   usd:128,  rate:1462.17 },
+  { platform:'AWS',  month:'2026년 2월', project:'로우핸드(기타)',        krw:0,        usd:0,    rate:1462.17 },
+  { platform:'AWS',  month:'2026년 2월', project:'치즈냥이',             krw:0,        usd:0,    rate:1462.17 },
+  { platform:'AWS',  month:'2026년 2월', project:'미니디펜더스',         krw:0,        usd:0,    rate:1462.17 },
+  { platform:'뒤끝', month:'2026년 1월', project:'쉐도우 서바이벌',     krw:0,        usd:0,    rate:1200 },
+  { platform:'뒤끝', month:'2026년 1월', project:'크라운 럼블',         krw:47712,    usd:40,   rate:1200 },
+  { platform:'뒤끝', month:'2026년 1월', project:'히어로즈 크루',        krw:678552,   usd:565,  rate:1200 },
+  { platform:'뒤끝', month:'2026년 1월', project:'히어로즈 크루 (중국)', krw:0,        usd:0,    rate:1200 },
+  { platform:'GCP',  month:'2026년 1월', project:'악!팅!',              krw:119434,   usd:81,   rate:1469.25 },
+  { platform:'GCP',  month:'2026년 1월', project:'에일리언 제로',        krw:480000,   usd:327,  rate:1469.25 },
+  { platform:'GCP',  month:'2026년 1월', project:'빙글빙글 기사단',      krw:8559,     usd:6,    rate:1469.25 },
+  { platform:'GCP',  month:'2026년 1월', project:'몬스터하우스',         krw:7756,     usd:5,    rate:1469.25 },
+  { platform:'GCP',  month:'2026년 1월', project:'헬매니저',             krw:7986,     usd:5,    rate:1469.25 },
+  { platform:'GCP',  month:'2026년 1월', project:'드래곤아일랜드',       krw:7986,     usd:5,    rate:1469.25 },
+  { platform:'GCP',  month:'2026년 1월', project:'드림레시피',           krw:3967471,  usd:2700, rate:1469.25 },
+  { platform:'GCP',  month:'2026년 1월', project:'키스인퍼블릭',         krw:204228,   usd:139,  rate:1469.25 },
+  { platform:'GCP',  month:'2026년 1월', project:'기타비용',             krw:14505594, usd:9873, rate:1469.25, isOther:true },
+  { platform:'AWS',  month:'2026년 1월', project:'흑마법사키우기',       krw:0,        usd:0,    rate:1469.25 },
+  { platform:'AWS',  month:'2026년 1월', project:'던전랜덤디펜스',       krw:1916842,  usd:1305, rate:1469.25 },
+  { platform:'AWS',  month:'2026년 1월', project:'FLAMINGO',            krw:536364,   usd:365,  rate:1469.25 },
+  { platform:'AWS',  month:'2026년 1월', project:'로우핸드(기타)',        krw:0,        usd:0,    rate:1469.25 },
+  { platform:'AWS',  month:'2026년 1월', project:'치즈냥이',             krw:0,        usd:0,    rate:1469.25 },
+  { platform:'AWS',  month:'2026년 1월', project:'미니디펜더스',         krw:0,        usd:0,    rate:1469.25 },
+];
+
+const MONTHS = ['2026년 1월', '2026년 2월', '2026년 3월'];
+const PREV = { '2026년 3월':'2026년 2월', '2026년 2월':'2026년 1월', '2026년 1월':null };
+const fmt = n => n.toLocaleString('ko-KR');
+const fmtK = n => n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(0)+'K' : String(n);
+const sum = arr => arr.reduce((a,b) => a+b.krw, 0);
+const sumUsd = arr => arr.reduce((a,b) => a+b.usd, 0);
+
+// ── KPI (동적: 선택된 월 기준) ──
+function calcKpi(selectedMonth) {
+  const months = selectedMonth === 'all' ? MONTHS : [selectedMonth];
+  const prevMonth = selectedMonth === 'all' ? null : PREV[selectedMonth];
+
+  const cur = rawData.filter(d => months.includes(d.month));
+  const prev = prevMonth ? rawData.filter(d => d.month === prevMonth) : null;
+
+  // 헤더 배지 업데이트
+  document.getElementById('headerBadge').textContent =
+    selectedMonth === 'all' ? '2026년 1~3월' : selectedMonth;
+
+  // 총 합계 카드
+  const label = selectedMonth === 'all' ? '총 서버비 (1~3월)' : selectedMonth + ' 총 서버비';
+  document.getElementById('kpi-total-label').textContent = label;
+  document.getElementById('kpi-total-krw').textContent = fmt(sum(cur)) + '원';
+  document.getElementById('kpi-total-usd').textContent = '$' + fmt(sumUsd(cur));
+  const totalBadge = document.getElementById('kpi-total-badge');
+  if (prev) {
+    const curT = sum(cur), prevT = sum(prev);
+    const pct = ((curT - prevT) / prevT * 100).toFixed(1);
+    const isUp = curT >= prevT;
+    totalBadge.className = 'kpi-badge ' + (isUp ? 'up' : 'down');
+    totalBadge.textContent = (isUp ? '▲' : '▼') + ' ' + Math.abs(pct) + '% 전월 대비';
+  } else { totalBadge.textContent = ''; totalBadge.className = 'kpi-badge'; }
+
+  // 플랫폼별 카드
+  [['GCP','gcp'],['AWS','aws'],['뒤끝','dukkul']].forEach(([p, id]) => {
+    const pCur = cur.filter(d => d.platform === p);
+    const pPrev = prev ? prev.filter(d => d.platform === p) : null;
+    const lbl = selectedMonth === 'all' ? p + ' (전체)' : p;
+    document.getElementById(`kpi-${id}-label`).textContent = lbl;
+    document.getElementById(`kpi-${id}-krw`).textContent = fmt(sum(pCur)) + '원';
+    document.getElementById(`kpi-${id}-usd`).textContent = '$' + fmt(sumUsd(pCur));
+    const badge = document.getElementById(`kpi-${id}-badge`);
+    if (pPrev) {
+      const c = sum(pCur), pv = sum(pPrev);
+      if (pv > 0) {
+        const pct = ((c - pv) / pv * 100).toFixed(1);
+        const isUp = c >= pv;
+        badge.className = 'kpi-badge ' + (isUp ? 'up' : 'down');
+        badge.textContent = (isUp ? '▲' : '▼') + ' ' + Math.abs(pct) + '% 전월 대비';
+      } else { badge.textContent = ''; badge.className='kpi-badge'; }
+    } else { badge.textContent = ''; badge.className='kpi-badge'; }
+  });
+}
+
+// ── TREND CHART ──
+let trendChartInst = null;
+function buildTrendChart() {
+  if (trendChartInst) trendChartInst.destroy();
+  const ctx = document.getElementById('trendChart').getContext('2d');
+  const platforms = ['GCP','AWS','뒤끝'];
+  const colors = { GCP:'#4285f4', AWS:'#ff9900', '뒤끝':'#8b5cf6' };
+  const datasets = platforms.map(p => ({
+    label: p,
+    data: MONTHS.map(m => rawData.filter(d => d.platform===p && d.month===m).reduce((a,b)=>a+b.krw,0)),
+    borderColor: colors[p],
+    backgroundColor: colors[p] + '22',
+    fill: true,
+    tension: 0.35,
+    pointRadius: 4,
+    pointHoverRadius: 6,
+    borderWidth: 2,
+  }));
+  trendChartInst = new Chart(ctx, {
+    type: 'line',
+    data: { labels: MONTHS.map(m => m.replace('2026년 ','')), datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position:'bottom', labels:{ boxWidth:12, font:{size:11} } },
+        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmt(c.raw)}원` } }
+      },
+      scales: {
+        y: { ticks: { callback: v => fmtK(v)+'원', font:{size:10} }, grid:{ color:'#f1f5f9' } },
+        x: { ticks: { font:{size:11} }, grid:{ display:false } }
+      }
+    }
+  });
+}
+
+// ── PIE CHART (월 필터 반영) ──
+let pieChartInst = null;
+function buildPieChart(selectedMonth) {
+  if (pieChartInst) pieChartInst.destroy();
+  const ctx = document.getElementById('pieChart').getContext('2d');
+  const months = selectedMonth === 'all' ? MONTHS : [selectedMonth];
+  const platforms = ['GCP','AWS','뒤끝'];
+  const colors = ['#4285f4','#ff9900','#8b5cf6'];
+  const data = platforms.map(p =>
+    rawData.filter(d => d.platform===p && months.includes(d.month)).reduce((a,b)=>a+b.krw,0)
+  );
+  const title = selectedMonth === 'all' ? '🥧 플랫폼 비중 (전체)' : `🥧 ${selectedMonth} 플랫폼 비중`;
+  document.getElementById('pieTitle').textContent = title;
+  const total = data.reduce((a,b)=>a+b,0);
+  pieChartInst = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: platforms,
+      datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor:'#fff' }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position:'bottom', labels:{ boxWidth:12, font:{size:11} } },
+        tooltip: { callbacks: { label: c => ` ${c.label}: ${fmt(c.raw)}원 (${total>0?(c.parsed/total*100).toFixed(1):0}%)` } }
+      }
+    }
+  });
+}
+
+// ── SUMMARY ──
+function buildSummary(selectedMonth) {
+  const months = selectedMonth === 'all' ? MONTHS : [selectedMonth];
+  const platforms = [
+    { key:'GCP',  label:'GCP',  cls:'gcp',    icon: `<svg width="18" height="14" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg"><path d="M78 26C87 26 94 34 94 43 94 53 87 60 78 60L22 60C13 60 6 53 6 43 6 37 10 31 16 29 16 20 23 14 32 14 37 14 42 17 45 21 48 18 53 15 59 15 69 15 76 20 78 26Z" fill="#4285F4"/><circle cx="26" cy="22" r="20" fill="#EA4335"/><ellipse cx="6" cy="43" rx="10" ry="14" fill="#FBBC05"/><rect x="6" y="48" width="88" height="14" rx="7" fill="#34A853"/><path d="M78 33C84 33 88 38 88 43 88 49 84 54 78 54L22 54C16 54 12 49 12 43 12 38 16 34 20 33 21 27 26 24 33 24 37 24 41 26 43 29 46 26 50 25 55 25 62 25 68 29 70 33Z" fill="white"/></svg>` },
+    { key:'AWS',  label:'AWS',  cls:'aws',    icon: `<span style="display:inline-flex;align-items:center;gap:2px;vertical-align:middle"><span style="font-size:9px;font-weight:900;color:#232F3E;letter-spacing:-0.5px;font-family:Pretendard,'Arial Black',Arial,sans-serif;">aws</span><svg width="10" height="5" viewBox="0 0 100 50" fill="none"><path d="M5 20 Q50 40 95 20" stroke="#FF9900" stroke-width="13" fill="none" stroke-linecap="round"/><polygon points="82,8 95,20 82,30" fill="#FF9900"/></svg></span>` },
+    { key:'뒤끝', label:'뒤끝', cls:'dukkul', icon: `<svg width="16" height="20" viewBox="0 0 44 56"><circle cx="22" cy="13" r="12" fill="#1a1a1a"/><ellipse cx="22" cy="43" rx="13" ry="12" fill="#E53935"/><path d="M12 38 Q9 50 14 54 Q18 56 22 55 Q26 56 30 54 Q35 50 32 38" fill="#E53935"/></svg>` },
+  ];
+  const container = document.getElementById('summarySection');
+
+  if (selectedMonth !== 'all') {
+    // 단일 월 선택: 프로젝트별 상세
+    container.innerHTML = platforms.map(p => {
+      const items = rawData.filter(d => d.platform===p.key && d.month===selectedMonth && d.krw > 0);
+      const rows = items.length > 0
+        ? items.map(d => `<tr><td>${d.project}${d.isOther?' ⚠️':''}</td><td class="num" style="${d.isOther?'color:#ef4444;font-weight:600':''}">${fmt(d.krw)}</td><td class="num" style="${d.isOther?'color:#ef4444;font-weight:600':''}">${d.usd}</td></tr>`).join('')
+        : `<tr><td colspan="3" style="color:#94a3b8;text-align:center;padding:12px">데이터 없음</td></tr>`;
+      return `<div class="summary-card">
+        <div class="sc-header ${p.cls}">${p.icon} ${p.label} — ${selectedMonth}</div>
+        <table>
+          <thead><tr><th>프로젝트</th><th class="num">금액(원)</th><th class="num">금액($)</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    }).join('');
+  } else {
+    // 전체: 월별 합계
+    container.innerHTML = platforms.map(p => {
+      const rows = MONTHS.map(m => {
+        const items = rawData.filter(d => d.platform===p.key && d.month===m);
+        return `<tr><td>${m.replace('2026년 ','')}</td><td class="num">${fmt(sum(items))}</td><td class="num">${fmt(sumUsd(items))}</td></tr>`;
+      }).join('');
+      return `<div class="summary-card">
+        <div class="sc-header ${p.cls}">${p.icon} ${p.label} 월별 합계</div>
+        <table>
+          <thead><tr><th>월</th><th class="num">금액(원)</th><th class="num">금액($)</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ── TABLE ──
+function renderTable(data) {
+  const tbody = document.getElementById('tableBody');
+  document.getElementById('tableCount').textContent = `총 ${data.length}건`;
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">데이터가 없습니다</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(d => {
+    const pcls = d.platform==='GCP' ? 'gcp' : d.platform==='AWS' ? 'aws' : 'dukkul';
+    const pIcon = d.platform==='GCP'
+      ? `<svg width="13" height="10" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg"><path d="M78 26C87 26 94 34 94 43 94 53 87 60 78 60L22 60C13 60 6 53 6 43 6 37 10 31 16 29 16 20 23 14 32 14 37 14 42 17 45 21 48 18 53 15 59 15 69 15 76 20 78 26Z" fill="#4285F4"/><circle cx="26" cy="22" r="20" fill="#EA4335"/><ellipse cx="6" cy="43" rx="10" ry="14" fill="#FBBC05"/><rect x="6" y="48" width="88" height="14" rx="7" fill="#34A853"/><path d="M78 33C84 33 88 38 88 43 88 49 84 54 78 54L22 54C16 54 12 49 12 43 12 38 16 34 20 33 21 27 26 24 33 24 37 24 41 26 43 29 46 26 50 25 55 25 62 25 68 29 70 33Z" fill="white"/></svg>`
+      : d.platform==='AWS'
+      ? `<span style="display:inline-flex;align-items:center;gap:1px;vertical-align:middle"><span style="font-size:8px;font-weight:900;color:#232F3E;letter-spacing:-0.5px;font-family:Pretendard,'Arial Black',Arial,sans-serif;">aws</span><svg width="9" height="4" viewBox="0 0 100 50" fill="none"><path d="M5 20 Q50 40 95 20" stroke="#FF9900" stroke-width="13" fill="none" stroke-linecap="round"/><polygon points="82,8 95,20 82,30" fill="#FF9900"/></svg></span>`
+      : `<svg width="10" height="13" viewBox="0 0 44 56"><circle cx="22" cy="13" r="12" fill="#1a1a1a"/><ellipse cx="22" cy="43" rx="13" ry="12" fill="#E53935"/></svg>`;
+    const rowCls = d.isOther ? 'row-other' : '';
+    const krwCls = d.krw===0 ? 'amount-zero' : d.krw>=5000000 ? 'amount-high' : '';
+    return `<tr class="${rowCls}">
+      <td><span class="platform-badge ${pcls}">${pIcon} ${d.platform}</span></td>
+      <td>${d.month}</td>
+      <td>${d.project}${d.isOther?' ⚠️':''}</td>
+      <td class="num ${krwCls}">${d.krw===0 ? '-' : fmt(d.krw)}</td>
+      <td class="num ${d.usd===0?'amount-zero':''}">${d.usd===0 ? '-' : fmt(d.usd)}</td>
+      <td class="num" style="color:var(--text-muted)">${d.rate.toLocaleString()}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── FILTER ──
+function applyFilter() {
+  const month = document.getElementById('filterMonth').value;
+  const platform = document.getElementById('filterPlatform').value;
+  const proj = document.getElementById('filterProject').value.toLowerCase();
+
+  // KPI & 차트 & 요약 업데이트
+  calcKpi(month);
+  buildPieChart(month);
+  buildSummary(month);
+
+  const filtered = rawData.filter(d =>
+    (month==='all' || d.month===month) &&
+    (platform==='all' || d.platform===platform) &&
+    (proj==='' || d.project.toLowerCase().includes(proj))
+  );
+  renderTable(filtered);
+}
+
+function resetFilter() {
+  document.getElementById('filterMonth').value = 'all';
+  document.getElementById('filterPlatform').value = 'all';
+  document.getElementById('filterProject').value = '';
+  applyFilter();
+}
+
+// ── INIT ──
+calcKpi('all');
+buildTrendChart();
+buildPieChart('all');
+buildSummary('all');
+renderTable(rawData);
+</script>
+</body>
+</html>
