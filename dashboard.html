@@ -308,6 +308,18 @@
     .amount-zero { color: #94a3b8; }
     .amount-high { color: var(--red); font-weight: 600; }
 
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 8px 0 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
     @media (max-width: 1200px) {
       .kpi-grid { grid-template-columns: repeat(2, 1fr); }
       .chart-grid { grid-template-columns: 1fr; }
@@ -408,13 +420,12 @@
         <div class="kpi-header">
           <div class="kpi-label" id="kpi-gcp-label">GCP</div>
           <div class="kpi-icon" style="background:#e8f0fe; border-radius:8px; width:36px; height:36px; display:flex; align-items:center; justify-content:center;">
-            <!-- Google Cloud SVG icon -->
             <svg width="30" height="24" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
-              <path d="M78 26C87 26 94 34 94 43 94 53 87 60 78 60L22 60C13 60 6 53 6 43 6 37 10 31 16 29 16 20 23 14 32 14 37 14 42 17 45 21 48 18 53 15 59 15 69 15 76 20 78 26Z" fill="#4285F4"/>
-              <circle cx="26" cy="22" r="20" fill="#EA4335"/>
-              <ellipse cx="6" cy="43" rx="10" ry="14" fill="#FBBC05"/>
-              <rect x="6" y="48" width="88" height="14" rx="7" fill="#34A853"/>
-              <path d="M78 33C84 33 88 38 88 43 88 49 84 54 78 54L22 54C16 54 12 49 12 43 12 38 16 34 20 33 21 27 26 24 33 24 37 24 41 26 43 29 46 26 50 25 55 25 62 25 68 29 70 33Z" fill="white"/>
+              <path d="M80 24C89 24 96 32 96 41 96 51 89 58 80 58L20 58C11 58 4 51 4 41 4 35 8 29 14 27 14 18 21 12 30 12 35 12 40 15 43 19 46 16 51 13 57 13 67 13 74 18 77 24Z" fill="#4285F4"/>
+              <path d="M30 12C21 12 14 18 14 27C20 23 27 21 34 21L44 21C41 16 36 12 30 12Z" fill="#EA4335"/>
+              <ellipse cx="5" cy="41" rx="9" ry="14" fill="#FBBC05"/>
+              <path d="M4 41C4 51 11 58 20 58L80 58C89 58 96 51 96 41C93 48 86 54 78 54L22 54C14 54 7 48 4 41Z" fill="#34A853"/>
+              <path d="M76 32C82 32 86 36 86 41 86 46 82 50 76 50L24 50C18 50 14 46 14 41 14 37 17 34 21 33 22 27 27 24 33 24 37 24 41 26 43 29 45 26 49 25 54 25 61 25 66 29 68 32Z" fill="white"/>
             </svg>
           </div>
         </div>
@@ -473,6 +484,42 @@
     <!-- ── PLATFORM SUMMARY ── -->
     <div class="summary-grid" id="summarySection"></div>
 
+    <!-- ── GCP 프로젝트별 사용 비중 ── -->
+    <div class="section-divider">
+      <svg width="18" height="14" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg"><path d="M80 24C89 24 96 32 96 41 96 51 89 58 80 58L20 58C11 58 4 51 4 41 4 35 8 29 14 27 14 18 21 12 30 12 35 12 40 15 43 19 46 16 51 13 57 13 67 13 74 18 77 24Z" fill="#4285F4"/><path d="M30 12C21 12 14 18 14 27C20 23 27 21 34 21L44 21C41 16 36 12 30 12Z" fill="#EA4335"/><ellipse cx="5" cy="41" rx="9" ry="14" fill="#FBBC05"/><path d="M4 41C4 51 11 58 20 58L80 58C89 58 96 51 96 41C93 48 86 54 78 54L22 54C14 54 7 48 4 41Z" fill="#34A853"/><path d="M76 32C82 32 86 36 86 41 86 46 82 50 76 50L24 50C18 50 14 46 14 41 14 37 17 34 21 33 22 27 27 24 33 24 37 24 41 26 43 29 45 26 49 25 54 25 61 25 66 29 68 32Z" fill="white"/></svg>
+      GCP 프로젝트별 사용 비중
+    </div>
+
+    <div class="chart-grid" style="margin-bottom:16px;">
+      <div class="chart-card">
+        <h3 id="gcpBarTitle">📊 프로젝트별 소계 TOP 10</h3>
+        <div class="chart-wrapper" style="height:320px;"><canvas id="gcpBarChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3 id="gcpPieTitle">🥧 프로젝트 비중 TOP 8</h3>
+        <div class="chart-wrapper" style="height:320px;"><canvas id="gcpPieChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="table-card" style="margin-bottom:24px;">
+      <div class="table-header">
+        <h3>📋 GCP 프로젝트별 상세 비용</h3>
+        <span class="total-count" id="gcpTableCount"></span>
+      </div>
+      <div id="gcpTableWrap" style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>날짜</th>
+              <th>프로젝트</th>
+              <th class="num">소계</th>
+            </tr>
+          </thead>
+          <tbody id="gcpTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- ── DETAIL TABLE ── -->
     <div class="table-card">
       <div class="table-header">
@@ -506,15 +553,15 @@ const rawData = [
   { platform:'뒤끝', month:'2026년 3월', project:'크라운 럼블',         krw:35364,    usd:29,   rate:1200 },
   { platform:'뒤끝', month:'2026년 3월', project:'히어로즈 크루',        krw:261312,   usd:218,  rate:1200 },
   { platform:'뒤끝', month:'2026년 3월', project:'히어로즈 크루 (중국)', krw:0,        usd:0,    rate:1200 },
-  { platform:'GCP',  month:'2026년 3월', project:'악!팅!',              krw:775166,   usd:515,  rate:1504.76 },
-  { platform:'GCP',  month:'2026년 3월', project:'에일리언 제로',        krw:3635770,  usd:2416, rate:1504.76 },
-  { platform:'GCP',  month:'2026년 3월', project:'빙글빙글 기사단',      krw:17479,    usd:12,   rate:1504.76 },
-  { platform:'GCP',  month:'2026년 3월', project:'몬스터하우스',         krw:71108,    usd:47,   rate:1504.76 },
-  { platform:'GCP',  month:'2026년 3월', project:'헬매니저',             krw:83224,    usd:55,   rate:1504.76 },
-  { platform:'GCP',  month:'2026년 3월', project:'드래곤아일랜드',       krw:144864,   usd:96,   rate:1504.76 },
+  { platform:'GCP',  month:'2026년 3월', project:'악튀니',              krw:626796,   usd:417,  rate:1504.76 },
+  { platform:'GCP',  month:'2026년 3월', project:'에일리언 제로',        krw:2879974,  usd:1914, rate:1504.76 },
+  { platform:'GCP',  month:'2026년 3월', project:'빙글빙글 기사단',      krw:19617,    usd:13,   rate:1504.76 },
+  { platform:'GCP',  month:'2026년 3월', project:'몬스터하우스',         krw:79804,    usd:53,   rate:1504.76 },
+  { platform:'GCP',  month:'2026년 3월', project:'헬매니저',             krw:57869,    usd:38,   rate:1504.76 },
+  { platform:'GCP',  month:'2026년 3월', project:'드래곤아일랜드',       krw:100045,   usd:66,   rate:1504.76 },
   { platform:'GCP',  month:'2026년 3월', project:'드림레시피',           krw:0,        usd:0,    rate:1504.76 },
-  { platform:'GCP',  month:'2026년 3월', project:'키스인퍼블릭',         krw:1880498,  usd:1250, rate:1504.76 },
-  { platform:'GCP',  month:'2026년 3월', project:'기타비용',             krw:7131512,  usd:4739, rate:1504.76, isOther:true },
+  { platform:'GCP',  month:'2026년 3월', project:'키스인퍼블릭',         krw:1530781,  usd:1017, rate:1504.76 },
+  { platform:'GCP',  month:'2026년 3월', project:'기타비용',             krw:8444735,  usd:5612, rate:1504.76, isOther:true },
   { platform:'AWS',  month:'2026년 3월', project:'흑마법사키우기',       krw:0,        usd:0,    rate:1504.76 },
   { platform:'AWS',  month:'2026년 3월', project:'던전랜덤디펜스',       krw:1605684,  usd:1067, rate:1504.76 },
   { platform:'AWS',  month:'2026년 3월', project:'FLAMINGO',            krw:211359,   usd:140,  rate:1504.76 },
@@ -684,7 +731,7 @@ function buildPieChart(selectedMonth) {
 function buildSummary(selectedMonth) {
   const months = selectedMonth === 'all' ? MONTHS : [selectedMonth];
   const platforms = [
-    { key:'GCP',  label:'GCP',  cls:'gcp',    icon: `<svg width="18" height="14" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg"><path d="M78 26C87 26 94 34 94 43 94 53 87 60 78 60L22 60C13 60 6 53 6 43 6 37 10 31 16 29 16 20 23 14 32 14 37 14 42 17 45 21 48 18 53 15 59 15 69 15 76 20 78 26Z" fill="#4285F4"/><circle cx="26" cy="22" r="20" fill="#EA4335"/><ellipse cx="6" cy="43" rx="10" ry="14" fill="#FBBC05"/><rect x="6" y="48" width="88" height="14" rx="7" fill="#34A853"/><path d="M78 33C84 33 88 38 88 43 88 49 84 54 78 54L22 54C16 54 12 49 12 43 12 38 16 34 20 33 21 27 26 24 33 24 37 24 41 26 43 29 46 26 50 25 55 25 62 25 68 29 70 33Z" fill="white"/></svg>` },
+    { key:'GCP',  label:'GCP',  cls:'gcp',    icon: `<svg width="18" height="14" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg"><path d="M80 24C89 24 96 32 96 41 96 51 89 58 80 58L20 58C11 58 4 51 4 41 4 35 8 29 14 27 14 18 21 12 30 12 35 12 40 15 43 19 46 16 51 13 57 13 67 13 74 18 77 24Z" fill="#4285F4"/><path d="M30 12C21 12 14 18 14 27C20 23 27 21 34 21L44 21C41 16 36 12 30 12Z" fill="#EA4335"/><ellipse cx="5" cy="41" rx="9" ry="14" fill="#FBBC05"/><path d="M4 41C4 51 11 58 20 58L80 58C89 58 96 51 96 41C93 48 86 54 78 54L22 54C14 54 7 48 4 41Z" fill="#34A853"/><path d="M76 32C82 32 86 36 86 41 86 46 82 50 76 50L24 50C18 50 14 46 14 41 14 37 17 34 21 33 22 27 27 24 33 24 37 24 41 26 43 29 45 26 49 25 54 25 61 25 66 29 68 32Z" fill="white"/></svg>` },
     { key:'AWS',  label:'AWS',  cls:'aws',    icon: `<span style="display:inline-flex;align-items:center;gap:2px;vertical-align:middle"><span style="font-size:9px;font-weight:900;color:#232F3E;letter-spacing:-0.5px;font-family:Pretendard,'Arial Black',Arial,sans-serif;">aws</span><svg width="10" height="5" viewBox="0 0 100 50" fill="none"><path d="M5 20 Q50 40 95 20" stroke="#FF9900" stroke-width="13" fill="none" stroke-linecap="round"/><polygon points="82,8 95,20 82,30" fill="#FF9900"/></svg></span>` },
     { key:'뒤끝', label:'뒤끝', cls:'dukkul', icon: `<svg width="16" height="20" viewBox="0 0 44 56"><circle cx="22" cy="13" r="12" fill="#1a1a1a"/><ellipse cx="22" cy="43" rx="13" ry="12" fill="#E53935"/><path d="M12 38 Q9 50 14 54 Q18 56 22 55 Q26 56 30 54 Q35 50 32 38" fill="#E53935"/></svg>` },
   ];
@@ -731,10 +778,12 @@ function renderTable(data) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-muted);">데이터가 없습니다</td></tr>`;
     return;
   }
+  const totalKrw = data.reduce((s, d) => s + (d.krw || 0), 0);
+  const totalUsd = data.reduce((s, d) => s + (d.usd || 0), 0);
   tbody.innerHTML = data.map(d => {
     const pcls = d.platform==='GCP' ? 'gcp' : d.platform==='AWS' ? 'aws' : 'dukkul';
     const pIcon = d.platform==='GCP'
-      ? `<svg width="13" height="10" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg"><path d="M78 26C87 26 94 34 94 43 94 53 87 60 78 60L22 60C13 60 6 53 6 43 6 37 10 31 16 29 16 20 23 14 32 14 37 14 42 17 45 21 48 18 53 15 59 15 69 15 76 20 78 26Z" fill="#4285F4"/><circle cx="26" cy="22" r="20" fill="#EA4335"/><ellipse cx="6" cy="43" rx="10" ry="14" fill="#FBBC05"/><rect x="6" y="48" width="88" height="14" rx="7" fill="#34A853"/><path d="M78 33C84 33 88 38 88 43 88 49 84 54 78 54L22 54C16 54 12 49 12 43 12 38 16 34 20 33 21 27 26 24 33 24 37 24 41 26 43 29 46 26 50 25 55 25 62 25 68 29 70 33Z" fill="white"/></svg>`
+      ? `<svg width="13" height="10" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg"><path d="M80 24C89 24 96 32 96 41 96 51 89 58 80 58L20 58C11 58 4 51 4 41 4 35 8 29 14 27 14 18 21 12 30 12 35 12 40 15 43 19 46 16 51 13 57 13 67 13 74 18 77 24Z" fill="#4285F4"/><path d="M30 12C21 12 14 18 14 27C20 23 27 21 34 21L44 21C41 16 36 12 30 12Z" fill="#EA4335"/><ellipse cx="5" cy="41" rx="9" ry="14" fill="#FBBC05"/><path d="M4 41C4 51 11 58 20 58L80 58C89 58 96 51 96 41C93 48 86 54 78 54L22 54C14 54 7 48 4 41Z" fill="#34A853"/><path d="M76 32C82 32 86 36 86 41 86 46 82 50 76 50L24 50C18 50 14 46 14 41 14 37 17 34 21 33 22 27 27 24 33 24 37 24 41 26 43 29 45 26 49 25 54 25 61 25 66 29 68 32Z" fill="white"/></svg>`
       : d.platform==='AWS'
       ? `<span style="display:inline-flex;align-items:center;gap:1px;vertical-align:middle"><span style="font-size:8px;font-weight:900;color:#232F3E;letter-spacing:-0.5px;font-family:Pretendard,'Arial Black',Arial,sans-serif;">aws</span><svg width="9" height="4" viewBox="0 0 100 50" fill="none"><path d="M5 20 Q50 40 95 20" stroke="#FF9900" stroke-width="13" fill="none" stroke-linecap="round"/><polygon points="82,8 95,20 82,30" fill="#FF9900"/></svg></span>`
       : `<svg width="10" height="13" viewBox="0 0 44 56"><circle cx="22" cy="13" r="12" fill="#1a1a1a"/><ellipse cx="22" cy="43" rx="13" ry="12" fill="#E53935"/></svg>`;
@@ -748,7 +797,211 @@ function renderTable(data) {
       <td class="num ${d.usd===0?'amount-zero':''}">${d.usd===0 ? '-' : fmt(d.usd)}</td>
       <td class="num" style="color:var(--text-muted)">${d.rate.toLocaleString()}</td>
     </tr>`;
-  }).join('');
+  }).join('') + `<tr style="background:#f8fafc;border-top:2px solid var(--border);">
+    <td colspan="3" style="font-weight:700;padding:10px 16px;">합계</td>
+    <td class="num" style="font-weight:700;color:var(--primary)">${totalKrw > 0 ? fmt(totalKrw) : '-'}</td>
+    <td class="num" style="font-weight:700;color:var(--primary)">${totalUsd > 0 ? fmt(totalUsd) : '-'}</td>
+    <td></td>
+  </tr>`;
+}
+
+// ── GCP PROJECT DATA ──
+const gcpProjectData = [
+  // 2026년 3월
+  { month:'2026년 3월', project:'alohafactory-dw',             id:'alohafactory-dw',              cost:7917042, promo:0, other:-2901194, sub:5015848 },
+  { month:'2026년 3월', project:'aloha-platform',              id:'aloha-platform',               cost:6109068, promo:0, other:-1170474, sub:4938593 },
+  { month:'2026년 3월', project:'flamingo',                    id:'flamingo-408803',              cost:3568507, promo:0, other:-1147038, sub:2421469 },
+  { month:'2026년 3월', project:'aloha-infra',                 id:'aloha-infra',                  cost:1392428, promo:0, other:-520781,  sub:871647  },
+  { month:'2026년 3월', project:'Fightero',                    id:'fightero',                     cost:274571,  promo:0, other:-80778,   sub:193793  },
+  { month:'2026년 3월', project:'Kiss In Public',              id:'kiss-in-public',               cost:142014,  promo:0, other:-39008,   sub:103006  },
+  { month:'2026년 3월', project:'Use of elastic-cloud endpoint',id:'pr-2eaa93696afb75b',          cost:83404,   promo:0, other:0,        sub:83404   },
+  { month:'2026년 3월', project:'Demon Dungeon Defense',       id:'demon-dungeon-defense',        cost:58540,   promo:0, other:-16362,   sub:42178   },
+  { month:'2026년 3월', project:'flamingo-dev',                id:'flamingo-dev-fcbaf',           cost:28824,   promo:0, other:-41,      sub:28783   },
+  { month:'2026년 3월', project:'alohafactory-dw-tmp',         id:'alohafactory-dw-tmp',          cost:17009,   promo:0, other:-4383,    sub:12626   },
+  { month:'2026년 3월', project:'Draw Hammer',                 id:'draw-hammer',                  cost:10940,   promo:0, other:-2882,    sub:8058    },
+  { month:'2026년 3월', project:'Dragon Island',               id:'dragon-island-50378',          cost:9276,    promo:0, other:-2544,    sub:6732    },
+  { month:'2026년 3월', project:'Hell Corporation',            id:'hell-corporation',             cost:6285,    promo:0, other:-2218,    sub:4067    },
+  { month:'2026년 3월', project:'Monster House',               id:'monster-house-d48b8',          cost:5370,    promo:0, other:-1475,    sub:3895    },
+  { month:'2026년 3월', project:'aloha-demo',                  id:'aloha-demo',                   cost:4553,    promo:0, other:-1358,    sub:3195    },
+  { month:'2026년 3월', project:'Rail Defense',                id:'rail-defense-a6701',           cost:1320,    promo:0, other:-389,     sub:931     },
+  { month:'2026년 3월', project:'Shadow Survival',             id:'shadow-survival-426e1',        cost:704,     promo:0, other:-192,     sub:512     },
+  { month:'2026년 3월', project:'Block Puzzle 1010!',          id:'block-puzzle-1010-88ddb',      cost:614,     promo:0, other:-168,     sub:446     },
+  { month:'2026년 3월', project:'Idle Kingdoms',               id:'idle-kingdoms-43eb9',          cost:254,     promo:0, other:-70,      sub:184     },
+  { month:'2026년 3월', project:'Pop It Island',               id:'pop-it-island',                cost:198,     promo:0, other:-54,      sub:144     },
+  { month:'2026년 3월', project:'Draw Fence',                  id:'draw-fence-36ffa',             cost:140,     promo:0, other:-38,      sub:102     },
+  { month:'2026년 3월', project:'Fidget Island',               id:'fidget-island-ca750',          cost:7,       promo:0, other:-2,       sub:5       },
+  { month:'2026년 3월', project:'Red Light Green Light',       id:'red-light-green-light-aloha',  cost:2,       promo:0, other:0,        sub:2       },
+  { month:'2026년 3월', project:'Animal Survivors',            id:'animal-survivors',             cost:1,       promo:0, other:0,        sub:1       },
+  { month:'2026년 3월', project:'Aloha-SDK-Demo-Test',         id:'aloha-sdk-demo-test',          cost:0,       promo:0, other:0,        sub:0       },
+  { month:'2026년 3월', project:'TY-Test',                     id:'aloha-sdk-test',               cost:0,       promo:0, other:0,        sub:0       },
+  // 2026년 2월
+  { month:'2026년 2월', project:'alohafactory-dw',             id:'alohafactory-dw',              cost:6456932, promo:0, other:-408,     sub:6456524 },
+  { month:'2026년 2월', project:'aloha-platform',              id:'aloha-platform',               cost:5952836, promo:0, other:-12711,   sub:5940125 },
+  { month:'2026년 2월', project:'flamingo',                    id:'flamingo-408803',              cost:3055610, promo:0, other:-127228,  sub:2928383 },
+  { month:'2026년 2월', project:'Dream recipe',                id:'dream-recipe',                 cost:1467056, promo:0, other:0,        sub:1467056 },
+  { month:'2026년 2월', project:'aloha-infra',                 id:'aloha-infra',                  cost:1341577, promo:0, other:-126135,  sub:1215442 },
+  { month:'2026년 2월', project:'Fightero',                    id:'fightero',                     cost:296068,  promo:0, other:0,        sub:296068  },
+  { month:'2026년 2월', project:'Kiss In Public',              id:'kiss-in-public',               cost:141239,  promo:0, other:0,        sub:141239  },
+  { month:'2026년 2월', project:'Use of elastic-cloud endpoint',id:'pr-2eaa93696afb75b',          cost:75514,   promo:0, other:0,        sub:75514   },
+  { month:'2026년 2월', project:'Demon Dungeon Defense',       id:'demon-dungeon-defense',        cost:64345,   promo:0, other:0,        sub:64345   },
+  { month:'2026년 2월', project:'alohafactory-dreamrecipe',    id:'alohafactory-dreamrecipe',     cost:25051,   promo:0, other:-1098,    sub:23953   },
+  { month:'2026년 2월', project:'alohafactory-dw-tmp',         id:'alohafactory-dw-tmp',          cost:16920,   promo:0, other:0,        sub:16920   },
+  { month:'2026년 2월', project:'flamingo-dev',                id:'flamingo-dev-fcbaf',           cost:12151,   promo:0, other:0,        sub:12151   },
+  { month:'2026년 2월', project:'Draw Hammer',                 id:'draw-hammer',                  cost:10895,   promo:0, other:0,        sub:10895   },
+  { month:'2026년 2월', project:'Dragon Island',               id:'dragon-island-50378',          cost:9264,    promo:0, other:0,        sub:9264    },
+  { month:'2026년 2월', project:'Hell Corporation',            id:'hell-corporation',             cost:5514,    promo:0, other:0,        sub:5514    },
+  { month:'2026년 2월', project:'Monster House',               id:'monster-house-d48b8',          cost:5346,    promo:0, other:0,        sub:5346    },
+  { month:'2026년 2월', project:'aloha-demo',                  id:'aloha-demo',                   cost:4126,    promo:0, other:0,        sub:4126    },
+  { month:'2026년 2월', project:'Rail Defense',                id:'rail-defense-a6701',           cost:2913,    promo:0, other:0,        sub:2913    },
+  { month:'2026년 2월', project:'Shadow Survival',             id:'shadow-survival-426e1',        cost:709,     promo:0, other:0,        sub:709     },
+  { month:'2026년 2월', project:'Block Puzzle 1010!',          id:'block-puzzle-1010-88ddb',      cost:610,     promo:0, other:0,        sub:610     },
+  { month:'2026년 2월', project:'Idle Kingdoms',               id:'idle-kingdoms-43eb9',          cost:254,     promo:0, other:0,        sub:254     },
+  { month:'2026년 2월', project:'Pop It Island',               id:'pop-it-island',                cost:198,     promo:0, other:0,        sub:198     },
+  { month:'2026년 2월', project:'Draw Fence',                  id:'draw-fence-36ffa',             cost:140,     promo:0, other:0,        sub:140     },
+  { month:'2026년 2월', project:'Fidget Island',               id:'fidget-island-ca750',          cost:7,       promo:0, other:0,        sub:7       },
+  { month:'2026년 2월', project:'Red Light Green Light',       id:'red-light-green-light-aloha',  cost:2,       promo:0, other:0,        sub:2       },
+  { month:'2026년 2월', project:'Animal Survivors',            id:'animal-survivors',             cost:1,       promo:0, other:0,        sub:1       },
+  { month:'2026년 2월', project:'Aloha-SDK-Demo-Test',         id:'aloha-sdk-demo-test',          cost:0,       promo:0, other:0,        sub:0       },
+  { month:'2026년 2월', project:'TY-Test',                     id:'aloha-sdk-test',               cost:0,       promo:0, other:0,        sub:0       },
+  // 2026년 1월
+  { month:'2026년 1월', project:'alohafactory-dw',             id:'alohafactory-dw',              cost:8887594, promo:0, other:-427808,  sub:8459786 },
+  { month:'2026년 1월', project:'flamingo',                    id:'flamingo-408803',              cost:3918651, promo:0, other:-379194,  sub:3539457 },
+  { month:'2026년 1월', project:'aloha-platform',              id:'aloha-platform',               cost:2967751, promo:0, other:-147029,  sub:2820722 },
+  { month:'2026년 1월', project:'Dream recipe',                id:'dream-recipe',                 cost:2763324, promo:0, other:-146161,  sub:2617163 },
+  { month:'2026년 1월', project:'aloha-infra',                 id:'aloha-infra',                  cost:1457861, promo:0, other:-229323,  sub:1228538 },
+  { month:'2026년 1월', project:'Fightero',                    id:'fightero',                     cost:334318,  promo:0, other:-32856,   sub:301462  },
+  { month:'2026년 1월', project:'Kiss In Public',              id:'kiss-in-public',               cost:142244,  promo:0, other:-13804,   sub:128440  },
+  { month:'2026년 1월', project:'Use of elastic-cloud endpoint',id:'pr-2eaa93696afb75b',          cost:83871,   promo:0, other:0,        sub:83871   },
+  { month:'2026년 1월', project:'Demon Dungeon Defense',       id:'demon-dungeon-defense',        cost:83185,   promo:0, other:-8542,    sub:74643   },
+  { month:'2026년 1월', project:'alohafactory-dw-tmp',         id:'alohafactory-dw-tmp',          cost:17043,   promo:0, other:-1662,    sub:15381   },
+  { month:'2026년 1월', project:'Draw Hammer',                 id:'draw-hammer',                  cost:10997,   promo:0, other:-1073,    sub:9924    },
+  { month:'2026년 1월', project:'Dragon Island',               id:'dragon-island-50378',          cost:9393,    promo:0, other:-917,     sub:8476    },
+  { month:'2026년 1월', project:'Rail Defense',                id:'rail-defense-a6701',           cost:5961,    promo:0, other:-476,     sub:5485    },
+  { month:'2026년 1월', project:'Hell Corporation',            id:'hell-corporation',             cost:5562,    promo:0, other:-236,     sub:5326    },
+  { month:'2026년 1월', project:'Monster House',               id:'monster-house-d48b8',          cost:5402,    promo:0, other:-524,     sub:4878    },
+  { month:'2026년 1월', project:'aloha-demo',                  id:'aloha-demo',                   cost:3702,    promo:0, other:-212,     sub:3490    },
+  { month:'2026년 1월', project:'Shadow Survival',             id:'shadow-survival-426e1',        cost:712,     promo:0, other:-69,      sub:643     },
+  { month:'2026년 1월', project:'Block Puzzle 1010!',          id:'block-puzzle-1010-88ddb',      cost:623,     promo:0, other:-61,      sub:562     },
+  { month:'2026년 1월', project:'Idle Kingdoms',               id:'idle-kingdoms-43eb9',          cost:258,     promo:0, other:-25,      sub:233     },
+  { month:'2026년 1월', project:'flamingo-dev',                id:'flamingo-dev-fcbaf',           cost:216,     promo:0, other:0,        sub:216     },
+  { month:'2026년 1월', project:'Pop It Island',               id:'pop-it-island',                cost:201,     promo:0, other:-20,      sub:181     },
+  { month:'2026년 1월', project:'Draw Fence',                  id:'draw-fence-36ffa',             cost:141,     promo:0, other:-14,      sub:127     },
+  { month:'2026년 1월', project:'Fidget Island',               id:'fidget-island-ca750',          cost:7,       promo:0, other:-1,       sub:6       },
+  { month:'2026년 1월', project:'Red Light Green Light',       id:'red-light-green-light-aloha',  cost:2,       promo:0, other:0,        sub:2       },
+  { month:'2026년 1월', project:'Animal Survivors',            id:'animal-survivors',             cost:1,       promo:0, other:0,        sub:1       },
+  { month:'2026년 1월', project:'Aloha-SDK-Demo-Test',         id:'aloha-sdk-demo-test',          cost:0,       promo:0, other:0,        sub:0       },
+  { month:'2026년 1월', project:'TY-Test',                     id:'aloha-sdk-test',               cost:0,       promo:0, other:0,        sub:0       },
+];
+
+// ── GCP PROJECT CHARTS ──
+const GCP_COLORS = [
+  '#4285F4','#EA4335','#FBBC05','#34A853','#8b5cf6','#06b6d4',
+  '#f97316','#ec4899','#14b8a6','#6366f1','#84cc16','#f43f5e'
+];
+let gcpBarInst = null, gcpPieInst = null;
+
+function buildGcpSection(selectedMonth) {
+  const months = selectedMonth === 'all' ? MONTHS : [selectedMonth];
+  const label = selectedMonth === 'all' ? '전체 (1~3월)' : selectedMonth;
+  document.getElementById('gcpBarTitle').textContent = `📊 프로젝트별 소계 TOP 10 — ${label}`;
+  document.getElementById('gcpPieTitle').textContent = `🥧 프로젝트 비중 TOP 8 — ${label}`;
+
+  // 월별로 집계 (같은 프로젝트를 합산)
+  const agg = {};
+  gcpProjectData.filter(d => months.includes(d.month)).forEach(d => {
+    if (!agg[d.project]) agg[d.project] = { project:d.project, id:d.id, cost:0, promo:0, other:0, sub:0 };
+    agg[d.project].cost  += d.cost;
+    agg[d.project].promo += d.promo;
+    agg[d.project].other += d.other;
+    agg[d.project].sub   += d.sub;
+  });
+  const sorted = Object.values(agg).sort((a,b) => b.sub - a.sub);
+
+  // ── BAR CHART (가로, TOP 10) ──
+  if (gcpBarInst) gcpBarInst.destroy();
+  const top10 = sorted.filter(d => d.sub > 0).slice(0, 10);
+  const barCtx = document.getElementById('gcpBarChart').getContext('2d');
+  gcpBarInst = new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: top10.map(d => d.project),
+      datasets: [
+        { label:'사용 비용', data: top10.map(d => d.cost),  backgroundColor:'#4285F430', borderColor:'#4285F4', borderWidth:1.5 },
+        { label:'소계',     data: top10.map(d => d.sub),   backgroundColor: top10.map((_,i) => GCP_COLORS[i%GCP_COLORS.length]+'cc'), borderWidth:0 },
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position:'bottom', labels:{ boxWidth:12, font:{size:11} } },
+        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmt(c.raw)}원` } }
+      },
+      scales: {
+        x: { ticks:{ callback: v => fmtK(v), font:{size:10} }, grid:{ color:'#f1f5f9' } },
+        y: { ticks:{ font:{size:11} }, grid:{ display:false } }
+      }
+    }
+  });
+
+  // ── PIE CHART (TOP 8) ──
+  if (gcpPieInst) gcpPieInst.destroy();
+  const top8 = sorted.filter(d => d.sub > 0).slice(0, 8);
+  const totalSub = sorted.reduce((a,b) => a+b.sub, 0);
+  const others   = totalSub - top8.reduce((a,b) => a+b.sub, 0);
+  const pieLabels = [...top8.map(d => d.project), ...(others > 0 ? ['기타'] : [])];
+  const pieData   = [...top8.map(d => d.sub),     ...(others > 0 ? [others]  : [])];
+  const pieColors = [...GCP_COLORS.slice(0,8),      ...(others > 0 ? ['#94a3b8'] : [])];
+  const pieCtx = document.getElementById('gcpPieChart').getContext('2d');
+  gcpPieInst = new Chart(pieCtx, {
+    type: 'doughnut',
+    data: { labels: pieLabels, datasets: [{ data: pieData, backgroundColor: pieColors, borderWidth:2, borderColor:'#fff' }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position:'bottom', labels:{ boxWidth:11, font:{size:10}, padding:8 } },
+        tooltip: { callbacks: { label: c => ` ${c.label}: ${fmt(c.raw)}원 (${totalSub>0?(c.parsed/totalSub*100).toFixed(1):0}%)` } }
+      }
+    }
+  });
+
+  // ── TABLE ──
+  const tbody = document.getElementById('gcpTableBody');
+  document.getElementById('gcpTableCount').textContent = `총 ${sorted.length}건`;
+
+  // 전체 선택 시 월별로 그룹화하여 표시, 단일 월 선택 시 그냥 표시
+  let rows;
+  if (selectedMonth === 'all') {
+    rows = MONTHS.flatMap(m => {
+      const monthRows = gcpProjectData.filter(d => d.month === m).sort((a,b) => b.sub - a.sub);
+      return monthRows;
+    });
+  } else {
+    rows = gcpProjectData.filter(d => d.month === selectedMonth).sort((a,b) => b.sub - a.sub);
+  }
+
+  const tableTotal = rows.reduce((s, d) => s + (d.sub || 0), 0);
+  tbody.innerHTML = rows.map(d => {
+    const subStyle = d.sub === 0 ? 'color:#94a3b8;' : d.sub >= 1000000 ? 'color:#ef4444;font-weight:600;' : '';
+    return `<tr>
+      <td style="white-space:nowrap;font-size:12px;color:var(--text-muted)">${d.month}</td>
+      <td style="font-weight:500;">${d.project}</td>
+      <td class="num" style="${subStyle}">${d.sub > 0 ? fmt(d.sub) : d.sub === 0 ? '-' : fmt(d.sub)}</td>
+    </tr>`;
+  }).join('') + `<tr style="background:#f8fafc;border-top:2px solid var(--border);">
+    <td colspan="2" style="font-weight:700;padding:10px 16px;">합계</td>
+    <td class="num" style="font-weight:700;color:var(--primary)">${fmt(tableTotal)}</td>
+  </tr>`;
+
+  // 20줄 초과 시 스크롤 처리
+  const wrap = document.getElementById('gcpTableWrap');
+  if (rows.length > 20) {
+    wrap.style.maxHeight = '520px';
+    wrap.style.overflowY = 'auto';
+  } else {
+    wrap.style.maxHeight = '';
+    wrap.style.overflowY = '';
+  }
 }
 
 // ── FILTER ──
@@ -761,6 +1014,7 @@ function applyFilter() {
   calcKpi(month);
   buildPieChart(month);
   buildSummary(month);
+  buildGcpSection(month);
 
   const filtered = rawData.filter(d =>
     (month==='all' || d.month===month) &&
@@ -782,6 +1036,7 @@ calcKpi('all');
 buildTrendChart();
 buildPieChart('all');
 buildSummary('all');
+buildGcpSection('all');
 renderTable(rawData);
 </script>
 </body>
