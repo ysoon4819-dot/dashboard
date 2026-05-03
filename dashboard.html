@@ -392,7 +392,7 @@
   <header>
     <div class="breadcrumb">비용관리 &rsaquo; <strong>서버비</strong></div>
     <div class="header-right">
-      <div class="badge" id="headerBadge">2026년 1~3월</div>
+      <div class="badge" id="headerBadge">2026년 1~4월</div>
       <div class="avatar">관</div>
     </div>
   </header>
@@ -406,6 +406,7 @@
       <label>월</label>
       <select id="filterMonth" onchange="applyFilter()">
         <option value="all">전체</option>
+        <option value="2026년 4월">2026년 4월</option>
         <option value="2026년 3월">2026년 3월</option>
         <option value="2026년 2월">2026년 2월</option>
         <option value="2026년 1월">2026년 1월</option>
@@ -599,6 +600,27 @@
 <script>
 // ── DATA ──
 const rawData = [
+  // 2026년 4월
+  { platform:'뒤끝', month:'2026년 4월', project:'쉐도우 서바이벌',        krw:0,         usd:0,    rate:1200 },
+  { platform:'뒤끝', month:'2026년 4월', project:'크라운 럼블',            krw:39240,     usd:33,   rate:1200 },
+  { platform:'뒤끝', month:'2026년 4월', project:'히어로즈 크루',           krw:220260,    usd:184,  rate:1200 },
+  { platform:'뒤끝', month:'2026년 4월', project:'히어로즈 크루 (중국)',    krw:0,         usd:0,    rate:1200 },
+  { platform:'뒤끝', month:'2026년 4월', project:'히어로즈 크루 (ARENA)',   krw:3708,      usd:3,    rate:1200 },
+  { platform:'GCP',  month:'2026년 4월', project:'악!팅!',                 krw:137018,    usd:91,   rate:1504.76 },
+  { platform:'GCP',  month:'2026년 4월', project:'에일리언 제로',           krw:595147,    usd:396,  rate:1504.76 },
+  { platform:'GCP',  month:'2026년 4월', project:'빙글빙글 기사단',         krw:2863,      usd:2,    rate:1504.76 },
+  { platform:'GCP',  month:'2026년 4월', project:'몬스터하우스',            krw:11551,     usd:8,    rate:1504.76 },
+  { platform:'GCP',  month:'2026년 4월', project:'헬매니저',                krw:11857,     usd:8,    rate:1504.76 },
+  { platform:'GCP',  month:'2026년 4월', project:'드래곤아일랜드',          krw:19871,     usd:13,   rate:1504.76 },
+  { platform:'GCP',  month:'2026년 4월', project:'드림레시피',              krw:0,         usd:0,    rate:1504.76 },
+  { platform:'GCP',  month:'2026년 4월', project:'키스인퍼블릭',            krw:305288,    usd:203,  rate:1504.76 },
+  { platform:'GCP',  month:'2026년 4월', project:'기타비용',                krw:9879612,   usd:6566, rate:1504.76, isOther:true },
+  { platform:'AWS',  month:'2026년 4월', project:'흑마법사키우기',          krw:0,         usd:0,    rate:1504.76 },
+  { platform:'AWS',  month:'2026년 4월', project:'던전랜덤디펜스',          krw:856494,    usd:569,  rate:1504.76 },
+  { platform:'AWS',  month:'2026년 4월', project:'FLAMINGO',               krw:0,         usd:0,    rate:1504.76 },
+  { platform:'AWS',  month:'2026년 4월', project:'로우핸드(기타)',           krw:0,         usd:0,    rate:1504.76 },
+  { platform:'AWS',  month:'2026년 4월', project:'치즈냥이',                krw:0,         usd:0,    rate:1504.76 },
+  { platform:'AWS',  month:'2026년 4월', project:'미니디펜더스',            krw:0,         usd:0,    rate:1504.76 },
   { platform:'뒤끝', month:'2026년 3월', project:'쉐도우 서바이벌',     krw:0,        usd:0,    rate:1200 },
   { platform:'뒤끝', month:'2026년 3월', project:'크라운 럼블',         krw:35364,    usd:29,   rate:1200 },
   { platform:'뒤끝', month:'2026년 3월', project:'히어로즈 크루',        krw:261312,   usd:218,  rate:1200 },
@@ -658,8 +680,8 @@ const rawData = [
   { platform:'AWS',  month:'2026년 1월', project:'미니디펜더스',         krw:0,        usd:0,    rate:1469.25 },
 ];
 
-const MONTHS = ['2026년 1월', '2026년 2월', '2026년 3월'];
-const PREV = { '2026년 3월':'2026년 2월', '2026년 2월':'2026년 1월', '2026년 1월':null };
+const MONTHS = ['2026년 1월', '2026년 2월', '2026년 3월', '2026년 4월'];
+const PREV = { '2026년 4월':'2026년 3월', '2026년 3월':'2026년 2월', '2026년 2월':'2026년 1월', '2026년 1월':null };
 const fmt = n => n.toLocaleString('ko-KR');
 const fmtK = n => n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 1000 ? (n/1000).toFixed(0)+'K' : String(n);
 const sum = arr => arr.reduce((a,b) => a+b.krw, 0);
@@ -675,10 +697,10 @@ function calcKpi(selectedMonth) {
 
   // 헤더 배지 업데이트
   document.getElementById('headerBadge').textContent =
-    selectedMonth === 'all' ? '2026년 1~3월' : selectedMonth;
+    selectedMonth === 'all' ? '2026년 1~4월' : selectedMonth;
 
   // 총 합계 카드
-  const label = selectedMonth === 'all' ? '총 서버비 (1~3월)' : selectedMonth + ' 총 서버비';
+  const label = selectedMonth === 'all' ? '총 서버비 (1~4월)' : selectedMonth + ' 총 서버비';
   document.getElementById('kpi-total-label').textContent = label;
   document.getElementById('kpi-total-krw').textContent = fmt(sum(cur)) + '원';
   document.getElementById('kpi-total-usd').textContent = '$' + fmt(sumUsd(cur));
@@ -857,6 +879,16 @@ function renderTable(data) {
 
 // ── GCP PROJECT DATA ──
 const gcpProjectData = [
+  // 2026년 4월
+  { month:'2026년 4월', project:'기타비용(기타)',         id:'gcp-other-apr',             cost:9879612, promo:0, other:0,        sub:9879612 },
+  { month:'2026년 4월', project:'에일리언 제로',          id:'alien-zero-apr',            cost:595147,  promo:0, other:0,        sub:595147  },
+  { month:'2026년 4월', project:'키스인퍼블릭',           id:'kiss-in-public-apr',        cost:305288,  promo:0, other:0,        sub:305288  },
+  { month:'2026년 4월', project:'악!팅!',                id:'akting-apr',                cost:137018,  promo:0, other:0,        sub:137018  },
+  { month:'2026년 4월', project:'드래곤아일랜드',         id:'dragon-island-apr',         cost:19871,   promo:0, other:0,        sub:19871   },
+  { month:'2026년 4월', project:'헬매니저',               id:'hell-manager-apr',          cost:11857,   promo:0, other:0,        sub:11857   },
+  { month:'2026년 4월', project:'몬스터하우스',           id:'monster-house-apr',         cost:11551,   promo:0, other:0,        sub:11551   },
+  { month:'2026년 4월', project:'빙글빙글 기사단',        id:'bing-knight-apr',           cost:2863,    promo:0, other:0,        sub:2863    },
+  { month:'2026년 4월', project:'드림레시피',             id:'dream-recipe-apr',          cost:0,       promo:0, other:0,        sub:0       },
   // 2026년 3월
   { month:'2026년 3월', project:'alohafactory-dw',             id:'alohafactory-dw',              cost:7917042, promo:0, other:-2901194, sub:5015848 },
   { month:'2026년 3월', project:'aloha-platform',              id:'aloha-platform',               cost:6109068, promo:0, other:-1170474, sub:4938593 },
@@ -952,7 +984,7 @@ let gcpServicePieInst = null, gcpPieInst = null;
 
 function buildGcpSection(selectedMonth) {
   const months = selectedMonth === 'all' ? MONTHS : [selectedMonth];
-  const label = selectedMonth === 'all' ? '전체 (1~3월)' : selectedMonth;
+  const label = selectedMonth === 'all' ? '전체 (1~4월)' : selectedMonth;
   document.getElementById('gcpServicePieTitle').textContent = `🥧 서비스별 비중 TOP 8 — ${label}`;
   document.getElementById('gcpPieTitle').textContent = `🥧 프로젝트 비중 TOP 8 — ${label}`;
 
@@ -1054,6 +1086,31 @@ function buildGcpSection(selectedMonth) {
 
 // ── GCP SERVICE DATA ──
 const gcpServiceData = [
+  // 2026년 4월
+  { month:'2026년 4월', service:'BigQuery',                               sub:5323593 },
+  { month:'2026년 4월', service:'Networking',                             sub:904320  },
+  { month:'2026년 4월', service:'Kubernetes Engine',                      sub:755199  },
+  { month:'2026년 4월', service:'Cloud Run',                              sub:746935  },
+  { month:'2026년 4월', service:'Compute Engine',                         sub:681162  },
+  { month:'2026년 4월', service:'Cloud Storage',                          sub:529494  },
+  { month:'2026년 4월', service:'Cloud SQL',                              sub:431119  },
+  { month:'2026년 4월', service:'App Engine',                             sub:391420  },
+  { month:'2026년 4월', service:'Cloud Filestore',                        sub:265241  },
+  { month:'2026년 4월', service:'Cloud Logging',                          sub:238962  },
+  { month:'2026년 4월', service:'Cloud Dataflow',                         sub:214377  },
+  { month:'2026년 4월', service:'Vertex AI',                              sub:135637  },
+  { month:'2026년 4월', service:'Cloud Memorystore for Redis',            sub:127604  },
+  { month:'2026년 4월', service:'Elastic Cloud (Elasticsearch Service)',  sub:85496   },
+  { month:'2026년 4월', service:'Cloud Monitoring',                       sub:69477   },
+  { month:'2026년 4월', service:'Artifact Registry',                      sub:52510   },
+  { month:'2026년 4월', service:'Secret Manager',                         sub:7694    },
+  { month:'2026년 4월', service:'Cloud DNS',                              sub:1666    },
+  { month:'2026년 4월', service:'Cloud Scheduler',                        sub:1301    },
+  { month:'2026년 4월', service:'Cloud Run Functions',                    sub:0       },
+  { month:'2026년 4월', service:'Gemini API',                             sub:0       },
+  { month:'2026년 4월', service:'Dataplex',                               sub:0       },
+  { month:'2026년 4월', service:'Cloud Pub/Sub',                          sub:0       },
+  { month:'2026년 4월', service:'VM Manager',                             sub:0       },
   // 2026년 3월
   { month:'2026년 3월', service:'BigQuery',                               sub:4970808 },
   { month:'2026년 3월', service:'Cloud Logging',                          sub:4174337 },
